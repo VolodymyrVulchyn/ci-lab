@@ -16,6 +16,6 @@ def main():
         "id,value\n1,10\n2,20\n",
         encoding="utf-8"
     )
-
+# тест на виконання одного модуля
 if __name__ == "__main__":
     main()
