@@ -45,6 +45,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          # щоб швидше ставились залежності
+          cache: "pip"
 
       - name: Install dependencies
         run: |
@@ -58,3 +60,21 @@ jobs:
           mkdir -p artifacts/${{ matrix.module }}
           echo "Running ${{ matrix.module }}"
           python -m ${{ matrix.module }} > artifacts/${{ matrix.module }}/ci.log 2>&1
+
+      # перевіряємо чи взагалі є папка artifacts/<module> (бо якщо модуль скіпнувся, то папки може і не бути)
+      - name: Check artifacts dir
+        id: art
+        run: |
+          if [ -d "artifacts/${{ matrix.module }}" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # завантажуємо результати  в github Actions artifacts, щоб їх можна було скачати
+      - name: Upload artifacts
+        if: ${{ steps.art.outputs.exists == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-${{ matrix.module }}
+          path: artifacts/${{ matrix.module }}
