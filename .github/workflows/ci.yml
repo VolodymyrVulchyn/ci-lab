@@ -32,6 +32,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # дивимось чи були зміни у файлах для якогось з модулів при пуші або пул реквесті
+      - name: Detect changed files for module
+        id: changes
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        uses: tj-actions/changed-files@v45
+        with:
+          files: |
+            ${{ matrix.module }}/**
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -43,7 +52,11 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run module
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.module == 'all' || github.event.inputs.module == matrix.module }}
+        # workflow dispatch запускаємо або все, або вибраний модуль, при пулл-пуш реквесті, запускаємо модуль лише, якщо були якісь зміни
+        if: ${{ 
+          (github.event_name == 'workflow_dispatch' && (github.event.inputs.module == 'all' || github.event.inputs.module == matrix.module))
+          || (github.event_name != 'workflow_dispatch' && steps.changes.outputs.any_changed == 'true')
+        }}
         run: |
           mkdir -p artifacts/${{ matrix.module }}
           echo "Running ${{ matrix.module }}"
