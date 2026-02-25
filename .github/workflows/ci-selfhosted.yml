@@ -1,0 +1,50 @@
+name: CI (self-hosted)
+
+on:
+  workflow_dispatch:
+    inputs:
+      module:
+        description: "wich module run on self-hosted"
+        required: true
+        default: "data_load"
+        type: choice
+        options:
+          - data_load
+          - data_quality_analysis
+          - data_research
+          - visualization
+
+jobs:
+  run-on-local:
+    # запускаємо саме на нашому локальному runner
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # показуємо, що це реально self-hosted машина
+      - name: Check environment
+        run: |
+          echo "runner: $(uname -a)"
+          python3 --version || python --version
+          pip3 --version || pip --version
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then python3 -m pip install -r requirements.txt; fi
+
+      # запускаємо вибраний модуль і пишемо лог у artifacts/<module>/
+      - name: Run selected module
+        run: |
+          mkdir -p artifacts/${{ github.event.inputs.module }}
+          echo "Running ${{ github.event.inputs.module }} on self-hosted"
+          python3 -m ${{ github.event.inputs.module }} > artifacts/${{ github.event.inputs.module }}/selfhosted.log 2>&1
+
+      # завантажуємо результати як artifacts
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-selfhosted-${{ github.event.inputs.module }}
+          path: artifacts/${{ github.event.inputs.module }}
