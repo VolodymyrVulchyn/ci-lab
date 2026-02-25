@@ -53,10 +53,7 @@ jobs:
 
       - name: Run module
         # workflow dispatch запускаємо або все, або вибраний модуль, при пулл-пуш реквесті, запускаємо модуль лише, якщо були якісь зміни
-        if: ${{ 
-          (github.event_name == 'workflow_dispatch' && (github.event.inputs.module == 'all' || github.event.inputs.module == matrix.module))
-          || (github.event_name != 'workflow_dispatch' && steps.changes.outputs.any_changed == 'true')
-        }}
+        if: ${{ (github.event_name == 'workflow_dispatch' && (github.event.inputs.module == 'all' || github.event.inputs.module == matrix.module)) || (github.event_name != 'workflow_dispatch' && steps.changes.outputs.any_changed == 'true') }}
         run: |
           mkdir -p artifacts/${{ matrix.module }}
           echo "Running ${{ matrix.module }}"
